@@ -8,13 +8,14 @@ public class UserController : MonoBehaviour
     public float moveSpeed = 0;
     public float panSpeed = 0;
 
-    private Rigidbody rb;
     private GameObject user;
     private ObjectPlacementManager placementManager;
 
+    private Vector2 movementVector;
     private float movementX;
     private float movementY;
     private float movementZ;
+    private float movementRad;
     private float rotationXAxis;
     private float rotationYAxis;
     private float translationSpeed;
@@ -32,34 +33,52 @@ public class UserController : MonoBehaviour
 
     private void Update()
     {
-        Vector3 movement = new Vector3(movementX, movementY, movementZ);
-        user.transform.Translate(movement * translationSpeed, Space.World);
+        if (Application.isEditor)
+        {
+            Vector3 rotateValue = new Vector3(rotationYAxis, rotationXAxis * -1, 0);
+            Debug.Log(rotateValue);
+            Debug.Log(transform.rotation.eulerAngles);
+            transform.eulerAngles = transform.eulerAngles - (rotateValue * rotationSpeed);
 
-        Vector3 rotateValue = new Vector3(rotationYAxis, rotationXAxis * -1, 0);
-        transform.eulerAngles = transform.eulerAngles - (rotateValue * rotationSpeed);
+            Vector3 movement = new Vector3(movementX, movementY, movementZ);
+            user.transform.Translate(movement * translationSpeed, Space.World);
+        }
     }
 
     private void OnMove(InputValue movementValue)
     {
-        // Debug.Log(movementValue);
-        Vector2 movementVector = movementValue.Get<Vector2>();
+        if (Application.isEditor)
+        {
+            movementVector = movementValue.Get<Vector2>();
+            if (movementVector.x == 0 && movementVector.y == 0)
+            {
+                movementX = 0;
+                movementZ = 0;
+                return;
+            }
 
-        movementX = movementVector.x;
-        movementZ = movementVector.y;
+            movementRad = Mathf.Atan2(movementVector.x, movementVector.y) + transform.rotation.eulerAngles.y * Mathf.Deg2Rad;
+            movementX = Mathf.Sin(movementRad);
+            movementZ = Mathf.Cos(movementRad);
+        }
     }
 
     private void OnLook(InputValue movementValue)
     {
-        // Debug.Log("OnLook");
-        // Debug.Log(movementValue);
-        Vector2 movementVector = movementValue.Get<Vector2>();
-        rotationXAxis = movementVector.x;
-        rotationYAxis = movementVector.y;
+        if (Application.isEditor)
+        {
+            Vector2 movementVector = movementValue.Get<Vector2>();
+            rotationXAxis = movementVector.x;
+            rotationYAxis = movementVector.y;
+        }
     }
 
     private void OnElevate(InputValue movementValue)
     {
-        movementY = movementValue.Get<float>();
+        if (Application.isEditor)
+        {
+            movementY = movementValue.Get<float>();
+        }
     }
 
     private void OnFire()
